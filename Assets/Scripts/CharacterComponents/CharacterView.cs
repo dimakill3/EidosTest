@@ -14,24 +14,25 @@ namespace CharacterComponents
     [RequireComponent(typeof(Animator))]
     public class CharacterView : MonoBehaviour, ISavedProgress
     {
+        [Header("Main")]
         [SerializeField] private AimModeEnum defaultAimMode;
-        [SerializeField] private Animator animator;
-        [SerializeField] private Transform aimTargetContainer;
-        [SerializeField] private Rig headRig;
-        [SerializeField] private Rig bodyRig;
-        [SerializeField] private Rig eyeRig;
-        [SerializeField] private MultiAimConstraint headAimConstraint;
-        [SerializeField] private MultiAimConstraint leftEyeAimConstraint;
-        [SerializeField] private MultiAimConstraint rightEyeAimConstraint;
-        [SerializeField] private RigBuilder rigBuilder;
+        [Space]
+        [Header("AimConstraints")]
+        [SerializeField] private Transform headAimConstraint;
+        [SerializeField] private Transform bodyAimConstraint;
+        [SerializeField] private Transform eyeAimConstraint;
+        [SerializeField] private Rig headAimRig;
+        [SerializeField] private Rig bodyAimRig;
+        [SerializeField] private Rig eyeAimRig;
         [Range(0, 1)]
-        [SerializeField] private float headRigAimWeight;
+        [SerializeField] private float headAimRigWeight;
         [Range(0, 1)]
-        [SerializeField] private float bodyRigAimWeight;
+        [SerializeField] private float bodyAimRigWeight;
         [Range(0, 1)]
-        [SerializeField] private float eyeRigAimWeight;
+        [SerializeField] private float eyeAimRigWeight;
         
         private AimModeEnum _currentAimMode = AimModeEnum.None;
+        private Transform _target;
         private StateMachine _stateMachine;
         private EventProvider _eventProvider;
         private MonoService _monoService;
@@ -42,11 +43,13 @@ namespace CharacterComponents
             _monoService = monoService;
             
             _stateMachine = new StateMachine();
-            _stateMachine.AddState(new AimTargetState(_stateMachine, aimTargetContainer, headRig, bodyRig, eyeRig,
-                headRigAimWeight, bodyRigAimWeight, eyeRigAimWeight));
-            _stateMachine.AddState(new FreeState(_stateMachine, aimTargetContainer, headRig, bodyRig, eyeRig,
-                headAimConstraint, leftEyeAimConstraint, rightEyeAimConstraint, rigBuilder, _monoService));
-            _stateMachine.AddState(new AvoidTargetState(_stateMachine, aimTargetContainer));
+            _stateMachine.AddState(new AimTargetState(_stateMachine, headAimConstraint, bodyAimConstraint,
+                eyeAimConstraint, headAimRig, bodyAimRig, eyeAimRig,
+                headAimRigWeight, bodyAimRigWeight, eyeAimRigWeight,
+                _monoService));
+            _stateMachine.AddState(new FreeState(_stateMachine, headAimConstraint, eyeAimConstraint,
+                headAimRig, eyeAimRig, _monoService));
+            _stateMachine.AddState(new AvoidTargetState(_stateMachine, headAimConstraint));
         }
 
         public void Enable()
@@ -65,6 +68,21 @@ namespace CharacterComponents
             _eventProvider.UnSubscribe<ChangeAimModeEvent>(ChangeAimMode);
         }
 
+        public void LoadProgress(GameSaveData gameSaveData)
+        {
+            ChangeAimMode(new ChangeAimModeEvent(gameSaveData.AimModeEnum));
+            _target.position = gameSaveData.AimPosition.ToUnityVector3();
+        }
+
+        public void UpdateProgress(GameSaveData gameSaveData)
+        {
+            gameSaveData.AimModeEnum = _currentAimMode;
+            gameSaveData.AimPosition = _target.position.ToVector3Data();
+        }
+
+        public void SetTarget(Transform target) => 
+            _target = target;
+
         private void ChangeAimMode(ChangeAimModeEvent changeAimModeEvent)
         {
             if (_currentAimMode == changeAimModeEvent.AimModeEnum)
@@ -78,10 +96,10 @@ namespace CharacterComponents
                     _stateMachine.Disable();
                     break;
                 case AimModeEnum.Aim:
-                    _stateMachine.EnterState<AimTargetState>();
+                    _stateMachine.EnterState<AimTargetState, Transform>(_target);
                     break;
                 case AimModeEnum.Free:
-                    _stateMachine.EnterState<FreeState>();
+                    _stateMachine.EnterState<FreeState, Transform>(_target);
                     break;
                 case AimModeEnum.Avoid:
                     _stateMachine.EnterState<AvoidTargetState>();
@@ -89,42 +107,6 @@ namespace CharacterComponents
             }
             
             _eventProvider.Invoke(new AimModeChangedEvent(_currentAimMode));
-        }
-
-        public void LoadProgress(GameSaveData gameSaveData)
-        {
-            ChangeAimMode(new ChangeAimModeEvent(gameSaveData.AimModeEnum));
-            aimTargetContainer.position = gameSaveData.AimPosition.ToUnityVector3();
-        }
-
-        public void UpdateProgress(GameSaveData gameSaveData)
-        {
-            gameSaveData.AimModeEnum = _currentAimMode;
-            gameSaveData.AimPosition = aimTargetContainer.position.ToVector3Data();
-        }
-
-        [ContextMenu("Inactive")]
-        public void SetInactive()
-        {
-            foreach (RigLayer rigLayer in rigBuilder.layers)
-            {
-                rigLayer.active = false;
-            }
-        }
-        
-        [ContextMenu("BuildRig")]
-        public void BuildRig()
-        {
-            rigBuilder.Build();
-        }
-        
-        [ContextMenu("Active")]
-        public void SetActive()
-        {
-            foreach (RigLayer rigLayer in rigBuilder.layers)
-            {
-                rigLayer.active = true;
-            }
         }
     }
 }

@@ -10,6 +10,8 @@ namespace Infrastructure.GameStates
 {
     public class StartGameState : BaseState
     {
+        private const string AimTargetTag = "Target";
+        
         private readonly Canvas _canvas;
         private readonly Transform _spawnPoint;
         private readonly EventProvider _eventProvider;
@@ -41,6 +43,9 @@ namespace Infrastructure.GameStates
             HudView hudView = _allFactories.GetHudView(_canvas.transform, _eventProvider, _saveLoadService);
             hudView.Enable();
             
+            GameObject aimTarget = GameObject.FindWithTag(AimTargetTag);
+
+            character.SetTarget(aimTarget.transform);
             character.Enable();
         }
     }
