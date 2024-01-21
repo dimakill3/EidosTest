@@ -16,6 +16,9 @@ namespace CharacterComponents
     {
         [Header("Main")]
         [SerializeField] private AimModeEnum defaultAimMode;
+        [SerializeField] private Transform headTransform;
+        [SerializeField] private Transform bodyTransform;
+        [SerializeField] private CapsuleCollider bodyCollider;
 
         [Space]
         [Header("Aim Mode Settings")]
@@ -32,31 +35,60 @@ namespace CharacterComponents
         [Range(0, 1)]
         [SerializeField] private float eyeAimRigWeight;
 
+        [Space]
+        [Header("Avoid Mode Settings")]
+        [Min(0)]
+        [SerializeField] private float avoidBodyConstraintZAxisRange;
+        [Min(0)]
+        [SerializeField] private float avoidBodyConstraintXAxisRange;
+        [Min(0)]
+        [SerializeField] private float avoidHeadConstraintZAxisRange;
+        [Min(0)]
+        [SerializeField] private float avoidHeadConstraintXAxisRange;
+        [SerializeField] private Transform bodyAvoidConstraint;
+        [SerializeField] private Transform headAvoidConstraint;
+        [SerializeField] private Rig bodyAvoidRig;
+        [SerializeField] private Rig headAvoidRig;
+
         private AimModeEnum _currentAimMode = AimModeEnum.None;
         private Transform _target;
         private StateMachine _stateMachine;
         private EventProvider _eventProvider;
         private MonoService _monoService;
+        private Vector3 _halfHeadSize;
+        private Vector3 _halfBodySize;
 
         public void Initialize(EventProvider eventProvider, MonoService monoService)
         {
             _eventProvider = eventProvider;
             _monoService = monoService;
             
+            _halfHeadSize = headTransform.localScale / 2;
+            _halfBodySize = bodyTransform.localScale / 2;
+            _halfBodySize.y = bodyCollider.height;
+            
             _stateMachine = new StateMachine();
             _stateMachine.AddState(new AimTargetState(_stateMachine, headAimConstraint, bodyAimConstraint,
-                eyeAimConstraint, headAimRig, bodyAimRig, eyeAimRig,
-                headAimRigWeight, bodyAimRigWeight, eyeAimRigWeight,
-                _monoService));
-            _stateMachine.AddState(new FreeState(_stateMachine, headAimConstraint, bodyAimConstraint,
-                eyeAimConstraint, headAimRig, bodyAimRig, eyeAimRig, _monoService));
-            _stateMachine.AddState(new AvoidTargetState(_stateMachine, headAimConstraint));
+                eyeAimConstraint, headAimRig, bodyAimRig, eyeAimRig, headAimRigWeight,
+                bodyAimRigWeight, eyeAimRigWeight, _monoService));
+            _stateMachine.AddState(new FreeState(_stateMachine, headAimConstraint, bodyAimConstraint, eyeAimConstraint,
+                headAimRig, bodyAimRig, eyeAimRig, _monoService));
+            _stateMachine.AddState(new AvoidTargetState(_stateMachine, bodyAvoidConstraint, headAvoidConstraint,
+                bodyAvoidRig, headAvoidRig, avoidBodyConstraintZAxisRange, avoidBodyConstraintXAxisRange,
+                avoidHeadConstraintZAxisRange, avoidHeadConstraintXAxisRange, bodyTransform,
+                headTransform, _halfHeadSize, _halfBodySize, _monoService));
         }
 
         public void Enable()
         {
-            ChangeAimMode(new ChangeAimModeEvent(defaultAimMode));
+            bodyAimRig.weight = 0;
+            headAimRig.weight = 0;
+            eyeAimRig.weight = 0;
+            bodyAvoidRig.weight = 0;
+            headAvoidRig.weight = 0;
             
+            ChangeAimMode(new ChangeAimModeEvent(defaultAimMode));
+
             _eventProvider.Subscribe<ChangeAimModeEvent>(ChangeAimMode);
         }
 
@@ -103,7 +135,7 @@ namespace CharacterComponents
                     _stateMachine.EnterState<FreeState, Transform>(_target);
                     break;
                 case AimModeEnum.Avoid:
-                    _stateMachine.EnterState<AvoidTargetState>();
+                    _stateMachine.EnterState<AvoidTargetState, Transform>(_target);
                     break;
             }
             

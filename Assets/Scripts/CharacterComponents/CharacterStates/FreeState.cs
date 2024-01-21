@@ -26,7 +26,7 @@ namespace CharacterComponents.CharacterStates
         private float _lastEyeUpdate;
         private float normalizedRandom => Random.Range(0, 1f);
 
-        private Transform _target;
+        private Transform _aimTarget;
         private Transform _currentHeadTarget;
         private Transform _currentBodyTarget;
         private Transform _currentEyeTarget;
@@ -46,10 +46,10 @@ namespace CharacterComponents.CharacterStates
 
         public override void Enter(Transform target)
         {
-            _target = target;
-            _currentHeadTarget = _target;
-            _currentBodyTarget = _target;
-            _currentEyeTarget = _target;
+            _aimTarget = target;
+            _currentHeadTarget = _aimTarget;
+            _currentBodyTarget = _aimTarget;
+            _currentEyeTarget = _aimTarget;
 
             _currentTime = 0;
 
@@ -64,11 +64,15 @@ namespace CharacterComponents.CharacterStates
         {
             _monoService.UpdateTick -= OnUpdateTick;
             
-            if (_currentEyeTarget != _target)
+            if (_currentEyeTarget != _aimTarget)
                 Object.Destroy(_currentEyeTarget.gameObject);
             
-            if (_currentHeadTarget != _target)
+            if (_currentHeadTarget != _aimTarget)
                 Object.Destroy(_currentEyeTarget.gameObject);
+
+            _headAimRig.weight = 0;
+            _bodyAimRig.weight = 0;
+            _eyeAimRig.weight = 0;
         }
 
         private void OnUpdateTick()
@@ -99,7 +103,7 @@ namespace CharacterComponents.CharacterStates
         {
             Transform newTarget = GetSomeTransform(isForce);
 
-            if (currentTarget != _target)
+            if (currentTarget != _aimTarget)
                 Object.Destroy(currentTarget.gameObject);
 
             currentTarget = newTarget;
@@ -114,7 +118,7 @@ namespace CharacterComponents.CharacterStates
             Transform targetTransform;
                 
             if (!isForce && normalizedRandom < AimAtTargetChance)
-                targetTransform = _target;
+                targetTransform = _aimTarget;
             else
             {
                 GameObject empty = new GameObject();

@@ -19,7 +19,7 @@ namespace CharacterComponents.CharacterStates
         private readonly float _eyeRigAimWeight;
         private readonly MonoService _monoService;
 
-        private Transform _target;
+        private Transform _aimTarget;
 
         public AimTargetState(StateMachine stateMachine, Transform headAimConstraint, Transform bodyAimConstraint,
             Transform eyeAimConstraint, Rig headAimRig, Rig bodyAimRig, Rig eyeAimRig, float headRigAimWeight,
@@ -40,7 +40,7 @@ namespace CharacterComponents.CharacterStates
 
         public override void Enter(Transform target)
         {
-            _target = target;
+            _aimTarget = target;
             
             _headAimRig.weight = _headRigAimWeight;
             _bodyAimRig.weight = _bodyRigAimWeight;
@@ -49,12 +49,18 @@ namespace CharacterComponents.CharacterStates
             _monoService.UpdateTick += OnTickUpdate;
         }
 
-        public override void Exit() => 
+        public override void Exit()
+        {
             _monoService.UpdateTick -= OnTickUpdate;
+            
+            _headAimRig.weight = 0;
+            _bodyAimRig.weight = 0;
+            _eyeAimRig.weight = 0;
+        }
 
         private void OnTickUpdate()
         {
-            var position = _target.position;
+            var position = _aimTarget.position;
             _headAimConstraint.position = position;
             _bodyAimConstraint.position = position;
             _eyeAimConstraint.position = position;
