@@ -58,7 +58,7 @@ namespace UI.HUD
             _eventProvider.UnSubscribe<AimModeChangedEvent>(OnAimModeChanged);
         }
 
-        private void FixedUpdate()
+        private void Update()
         {
             if (Input.GetKeyDown(KeyCode.Q))
                 aimModeToggle.onValueChanged.Invoke(!aimModeToggle.isOn);

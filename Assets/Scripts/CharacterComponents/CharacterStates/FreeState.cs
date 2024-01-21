@@ -68,7 +68,10 @@ namespace CharacterComponents.CharacterStates
                 Object.Destroy(_currentEyeTarget.gameObject);
             
             if (_currentHeadTarget != _aimTarget)
-                Object.Destroy(_currentEyeTarget.gameObject);
+                Object.Destroy(_currentHeadTarget.gameObject);
+            
+            if (_currentBodyTarget != _aimTarget)
+                Object.Destroy(_currentBodyTarget.gameObject);
 
             _headAimRig.weight = 0;
             _bodyAimRig.weight = 0;
