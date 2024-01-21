@@ -11,9 +11,9 @@ namespace CharacterComponents.CharacterStates
         private readonly Transform _headAimConstraint;
         private readonly Transform _bodyAimConstraint;
         private readonly Transform _eyeAimConstraint;
-        private readonly Rig _headRig;
-        private readonly Rig _bodyRig;
-        private readonly Rig _eyeRig;
+        private readonly Rig _headAimRig;
+        private readonly Rig _bodyAimRig;
+        private readonly Rig _eyeAimRig;
         private readonly float _headRigAimWeight;
         private readonly float _bodyRigAimWeight;
         private readonly float _eyeRigAimWeight;
@@ -22,16 +22,16 @@ namespace CharacterComponents.CharacterStates
         private Transform _target;
 
         public AimTargetState(StateMachine stateMachine, Transform headAimConstraint, Transform bodyAimConstraint,
-            Transform eyeAimConstraint, Rig headRig, Rig bodyRig, Rig eyeRig, float headRigAimWeight,
+            Transform eyeAimConstraint, Rig headAimRig, Rig bodyAimRig, Rig eyeAimRig, float headRigAimWeight,
             float bodyRigAimWeight, float eyeRigAimWeight, MonoService monoService)
             : base(stateMachine)
         {
             _headAimConstraint = headAimConstraint;
             _bodyAimConstraint = bodyAimConstraint;
             _eyeAimConstraint = eyeAimConstraint;
-            _headRig = headRig;
-            _bodyRig = bodyRig;
-            _eyeRig = eyeRig;
+            _headAimRig = headAimRig;
+            _bodyAimRig = bodyAimRig;
+            _eyeAimRig = eyeAimRig;
             _headRigAimWeight = headRigAimWeight;
             _bodyRigAimWeight = bodyRigAimWeight;
             _eyeRigAimWeight = eyeRigAimWeight;
@@ -42,9 +42,9 @@ namespace CharacterComponents.CharacterStates
         {
             _target = target;
             
-            _headRig.weight = _headRigAimWeight;
-            _bodyRig.weight = _bodyRigAimWeight;
-            _eyeRig.weight = _eyeRigAimWeight;
+            _headAimRig.weight = _headRigAimWeight;
+            _bodyAimRig.weight = _bodyRigAimWeight;
+            _eyeAimRig.weight = _eyeRigAimWeight;
 
             _monoService.UpdateTick += OnTickUpdate;
         }

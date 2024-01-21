@@ -8,34 +8,38 @@ namespace CharacterComponents.CharacterStates
 {
     public class FreeState : BasePayloadedState<Transform>
     {
-        private const float MinHeadUpdateCooldown = 5;
-        private const float MinEyeUpdateCooldown = 5;
-        private const float HeadUpdateChance = 0.01f;
-        private const float EyeUpdateChance = 0.01f;
+        private const float UpdateCooldown = 5;
+        private const float UpdateChance = 0.01f;
         private const float AimAtTargetChance = 0.3f;
 
         private readonly Transform _headAimConstraint;
+        private readonly Transform _bodyAimConstraint;
         private readonly Transform _eyeAimConstraint;
-        private readonly Rig _headRig;
-        private readonly Rig _eyeRig;
+        private readonly Rig _headAimRig;
+        private readonly Rig _bodyAimRig;
+        private readonly Rig _eyeAimRig;
         private readonly MonoService _monoService;
 
         private float _currentTime;
         private float _lastHeadUpdate;
+        private float _lastBodyUpdate;
         private float _lastEyeUpdate;
         private float normalizedRandom => Random.Range(0, 1f);
 
         private Transform _target;
         private Transform _currentHeadTarget;
+        private Transform _currentBodyTarget;
         private Transform _currentEyeTarget;
 
-        public FreeState(StateMachine stateMachine, Transform headAimConstraint, Transform eyeAimConstraint, Rig headRig,
-            Rig eyeRig, MonoService monoService) : base(stateMachine)
+        public FreeState(StateMachine stateMachine, Transform headAimConstraint, Transform bodyAimConstraint,
+            Transform eyeAimConstraint, Rig headAimRig, Rig bodyAimRig, Rig eyeAimRig, MonoService monoService) : base(stateMachine)
         {
             _headAimConstraint = headAimConstraint;
+            _bodyAimConstraint = bodyAimConstraint;
             _eyeAimConstraint = eyeAimConstraint;
-            _headRig = headRig;
-            _eyeRig = eyeRig;
+            _headAimRig = headAimRig;
+            _bodyAimRig = bodyAimRig;
+            _eyeAimRig = eyeAimRig;
 
             _monoService = monoService;
         }
@@ -43,12 +47,16 @@ namespace CharacterComponents.CharacterStates
         public override void Enter(Transform target)
         {
             _target = target;
+            _currentHeadTarget = _target;
+            _currentBodyTarget = _target;
+            _currentEyeTarget = _target;
 
             _currentTime = 0;
 
-            UpdateHead(true);
-            UpdateEye(true);
-            
+            UpdateConstraintAimTarget(ref _currentHeadTarget, _headAimRig, out _lastHeadUpdate, true);
+            UpdateConstraintAimTarget(ref _currentBodyTarget, _bodyAimRig, out _lastBodyUpdate, true);
+            UpdateConstraintAimTarget(ref _currentEyeTarget, _eyeAimRig, out _lastEyeUpdate, true);
+
             _monoService.UpdateTick += OnUpdateTick;
         }
 
@@ -67,43 +75,38 @@ namespace CharacterComponents.CharacterStates
         {
             _currentTime += Time.deltaTime;
 
-            if (_currentTime - _lastHeadUpdate > MinHeadUpdateCooldown && normalizedRandom < HeadUpdateChance)
-                UpdateHead();
+            if (NeedUpdate(_lastHeadUpdate))
+                UpdateConstraintAimTarget(ref _currentHeadTarget, _headAimRig, out _lastHeadUpdate);
 
             _headAimConstraint.position = _currentHeadTarget.position;
             
-            if (_currentTime - _lastEyeUpdate > MinEyeUpdateCooldown && normalizedRandom < EyeUpdateChance)
-                UpdateEye();
+            if (NeedUpdate(_lastBodyUpdate))
+                UpdateConstraintAimTarget(ref _currentBodyTarget, _bodyAimRig, out _lastBodyUpdate);
+            
+            _bodyAimConstraint.position = _currentBodyTarget.position;
+            
+            if (NeedUpdate(_lastEyeUpdate))
+                UpdateConstraintAimTarget(ref _currentEyeTarget, _eyeAimRig, out _lastEyeUpdate);
             
             _eyeAimConstraint.position = _currentEyeTarget.position;
         }
 
-        private void UpdateHead(bool isForce = false)
+        private bool NeedUpdate(float lastUpdateTime) => 
+            _currentTime - lastUpdateTime > UpdateCooldown && normalizedRandom < UpdateChance;
+
+        private void UpdateConstraintAimTarget(ref Transform currentTarget, Rig aimRig, out float lastUpdateTime,
+            bool isForce = false)
         {
             Transform newTarget = GetSomeTransform(isForce);
 
-            if (newTarget != _target)
-                Object.Destroy(_currentHeadTarget.gameObject);
+            if (currentTarget != _target)
+                Object.Destroy(currentTarget.gameObject);
 
-            _currentHeadTarget = newTarget;
+            currentTarget = newTarget;
 
-            _headRig.weight = normalizedRandom;
+            aimRig.weight = normalizedRandom;
 
-            _lastHeadUpdate = _currentTime;
-        }
-
-        private void UpdateEye(bool isForce = false)
-        {
-            Transform newTarget = GetSomeTransform(isForce);
-
-            if (newTarget != _target)
-                Object.Destroy(_currentEyeTarget.gameObject);
-
-            _currentEyeTarget = newTarget;
-            
-            _eyeRig.weight = normalizedRandom;
-            
-            _lastEyeUpdate = _currentTime;
+            lastUpdateTime = _currentTime;
         }
 
         private Transform GetSomeTransform(bool isForce)

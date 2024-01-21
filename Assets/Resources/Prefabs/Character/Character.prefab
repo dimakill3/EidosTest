@@ -677,11 +677,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultAimMode: 1
-  headAimConstraint: {fileID: 0}
-  bodyAimConstraint: {fileID: 0}
-  eyeAimConstraint: {fileID: 0}
-  headAimRig: {fileID: 3052427800495199918}
+  bodyAimConstraint: {fileID: 5189991209103346098}
+  headAimConstraint: {fileID: 5731702133635381962}
+  eyeAimConstraint: {fileID: 8197225097984147352}
   bodyAimRig: {fileID: 4339028482729700440}
+  headAimRig: {fileID: 3052427800495199918}
   eyeAimRig: {fileID: 7133091629042915503}
   headAimRigWeight: 0.6
   bodyAimRigWeight: 0.4
@@ -1351,7 +1351,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5731702133635381962}
   m_Layer: 0
-  m_Name: HeadAimTarget
+  m_Name: HeadAimConstraint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1382,7 +1382,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5189991209103346098}
   m_Layer: 0
-  m_Name: BodyAimTarget
+  m_Name: BodyAimConstraint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1521,7 +1521,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8197225097984147352}
   m_Layer: 0
-  m_Name: EyeAimTarget
+  m_Name: EyeAimConstraint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

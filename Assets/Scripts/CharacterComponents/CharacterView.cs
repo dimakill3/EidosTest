@@ -16,13 +16,14 @@ namespace CharacterComponents
     {
         [Header("Main")]
         [SerializeField] private AimModeEnum defaultAimMode;
+
         [Space]
-        [Header("AimConstraints")]
-        [SerializeField] private Transform headAimConstraint;
+        [Header("Aim Mode Settings")]
         [SerializeField] private Transform bodyAimConstraint;
+        [SerializeField] private Transform headAimConstraint;
         [SerializeField] private Transform eyeAimConstraint;
-        [SerializeField] private Rig headAimRig;
         [SerializeField] private Rig bodyAimRig;
+        [SerializeField] private Rig headAimRig;
         [SerializeField] private Rig eyeAimRig;
         [Range(0, 1)]
         [SerializeField] private float headAimRigWeight;
@@ -30,7 +31,7 @@ namespace CharacterComponents
         [SerializeField] private float bodyAimRigWeight;
         [Range(0, 1)]
         [SerializeField] private float eyeAimRigWeight;
-        
+
         private AimModeEnum _currentAimMode = AimModeEnum.None;
         private Transform _target;
         private StateMachine _stateMachine;
@@ -47,8 +48,8 @@ namespace CharacterComponents
                 eyeAimConstraint, headAimRig, bodyAimRig, eyeAimRig,
                 headAimRigWeight, bodyAimRigWeight, eyeAimRigWeight,
                 _monoService));
-            _stateMachine.AddState(new FreeState(_stateMachine, headAimConstraint, eyeAimConstraint,
-                headAimRig, eyeAimRig, _monoService));
+            _stateMachine.AddState(new FreeState(_stateMachine, headAimConstraint, bodyAimConstraint,
+                eyeAimConstraint, headAimRig, bodyAimRig, eyeAimRig, _monoService));
             _stateMachine.AddState(new AvoidTargetState(_stateMachine, headAimConstraint));
         }
 
